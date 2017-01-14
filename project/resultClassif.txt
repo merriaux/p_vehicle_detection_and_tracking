@@ -1,0 +1,59 @@
+*** param de base linearSVC***
+
+accuracy on train 1.0
+accuracy on test 0.97210184182
+0.1610410213470459 Seconds to test classifier.
+confusion matrix Train:
+ [[7704    0]
+ [   0 7062]]
+confusion matrix Test:
+ [[1910   52]
+ [  51 1679]]
+
+
+
+*** kernel='poly' ***
+0.647986888885498 Seconds to load features.
+456.823050737381 Seconds to train classifier.
+accuracy on train 0.989638358391
+accuracy on test 0.968851570964
+513.3172926902771 Seconds to test classifier.
+
+
+*** kernel='rbf' ***
+0.7595553398132324 Seconds to load features.
+243.3224012851715 Seconds to train classifier.
+accuracy on train 0.999051875931
+accuracy on test 0.99187432286
+295.71633219718933 Seconds to test classifier.
+
+
+
+*** linearSVC(C=0.1) 15% de test le reste pour train ***
+accuracy on train 1.0
+accuracy on test 0.970747562297
+0.1701798439025879 Seconds to test classifier.
+confusion matrix Train:
+ [[8206    0]
+ [   0 7483]]
+confusion matrix Test:
+ [[1419   41]
+ [  40 1269]]
+
+
+*** linearSVC(C=1) 15% de test le reste pour train ***
+accuracy on train 1.0
+accuracy on test 0.970025279884
+0.16895270347595215 Seconds to test classifier.
+confusion matrix Train:
+ [[8206    0]
+ [   0 7483]]
+confusion matrix Test:
+ [[1417   43]
+ [  40 1269]]
+
+ *** linearSVC(C=.0001) 15% de test le reste pour train ***
+ feature  : hog gray, spatial = 32,32, color HLS
+ accuracy on train 0.991205149449
+accuracy on test 0.989891696751
+with 15% of dataset for test and the others for train.
