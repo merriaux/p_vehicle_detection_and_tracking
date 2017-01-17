@@ -5,10 +5,11 @@ import cv2
 import time
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import normalize
 from skimage.feature import hog
 from sklearn.cross_validation import train_test_split
 import pickle
-
+import time
 from loadData import LoadData
 
 class Features:
@@ -88,18 +89,42 @@ class Features:
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
         else:
             feature_image = np.copy(image)
-        gray_image = cv2.cvtColor(np.copy(image),cv2.COLOR_RGB2GRAY)
+        gray_image = cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
         # Apply bin_spatial() to get spatial color features
+        '''
         spatial_features = self.bin_spatial(feature_image, size=spatial_size)
         # Apply color_hist() also with a color space option now
         hist_features = self.color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
         # Call get_hog_features() with vis=False, feature_vec=True
+        #t1 = time.time()
+        '''
         hog_features = self.get_hog_features(gray_image, orient,
-                                        pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+                                            pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+
+        #t2 = time.time()
+        #print(t2-t1,"s")
+        '''
+        otherHogImage = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+
+        hog_featuresH = self.get_hog_features(otherHogImage[:,:,0], orient,
+                                             pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+        hog_featuresL = self.get_hog_features(otherHogImage[:, :, 1], orient,
+                                              pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+        hog_featuresS = self.get_hog_features(otherHogImage[:, :, 2], orient,
+                                              pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+        '''
         # Append the new feature vector to the features list
-        features.append(np.concatenate((spatial_features, hist_features, hog_features)))
+
+        hog_array = np.concatenate((hog_features,), axis = 0)
+        #normalized = normalize(hog_array.reshape(1, -1))
+        features.append(hog_array)
+        #features.append((hog_features,hog_featuresL,hog_featuresA,hog_featuresB), axis = 0)
+        #print("feature shape",hog_features.shape, hog_featuresL.shape, " hog ", hog_featuresA.shape,hog_featuresB.shape)
+
+
         # Return list of feature vectors
         return features
+
     def featureCompute(self,cars_img,nocars_img):
         orient = 9
         pix_per_cell = 8
@@ -189,4 +214,5 @@ class Features:
 if __name__ == "__main__":
     obj = Features()
     obj.run()
+    obj.printFeaturesInfo()
     #obj.runTestLoadScaler();
