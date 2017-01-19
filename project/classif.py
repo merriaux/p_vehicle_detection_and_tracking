@@ -45,6 +45,7 @@ class Classifier:
         t = time.time()
         feat = Features()
         feat.loadFromPickle("features01.pkl")
+        print("feature shape", feat.X_train.shape)
         t2 = time.time()
         print(t2 - t, 'Seconds to load features.')
 

@@ -52,8 +52,32 @@ confusion matrix Test:
  [[1417   43]
  [  40 1269]]
 
- *** linearSVC(C=.0001) 15% de test le reste pour train ***
- feature  : hog gray, spatial = 32,32, color HLS
- accuracy on train 0.991205149449
+*** linearSVC(C=.0001) 15% de test le reste pour train ***
+feature  : hog gray, spatial = 32,32, color HLS
+accuracy on train 0.991205149449
 accuracy on test 0.989891696751
 with 15% of dataset for test and the others for train.
+
+
+
+*** linearSVC(C=.0001) 15% de test le reste pour train ***
+Feature LAB * 3 hog
+feature shape (15691, 5292)
+0.703974723815918 Seconds to load features.
+2.5590271949768066 Seconds to train classifier.
+accuracy on train 0.997833152763
+accuracy on test 0.987725631769
+0.18197131156921387 Seconds to test classifier.
+
+*** linearSVC(C=.0001) 15% de test le reste pour train ***
+Feature LAB * 3 hog --> c'est les problem d'imread
+0.17043828964233398 Seconds to test classifier.
+accuracy on train 0.997259575553
+accuracy on test 0.990613718412
+0.1760871410369873 Seconds to test classifier.
+confusion matrix Train:
+ [[8139   13]
+ [  30 7509]]
+confusion matrix Test:
+ [[1506   11]
+ [  15 1238]]

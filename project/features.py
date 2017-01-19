@@ -11,6 +11,7 @@ from sklearn.cross_validation import train_test_split
 import pickle
 import time
 from loadData import LoadData
+from skimage.io import imread
 
 class Features:
     def __init__(self):
@@ -64,7 +65,9 @@ class Features:
         # Iterate through the list of images
         for file in imgs:
             # Read in each one by one
-            image = mpimg.imread(file)
+            image = imread(file)
+            #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            #print("image ",image.dtype)
             features = features + self.extract_featuresImgNP(image, cspace, spatial_size,
                                   hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
         # Return list of feature vectors
@@ -75,6 +78,18 @@ class Features:
         # Create a list to append feature vectors to
         features = []
 
+        #imgNorm =
+        img_lab = cv2.cvtColor(imgNP, cv2.COLOR_RGB2LAB)
+        #print("imgNP ", imgNP.dtype,"img_lab ", img_lab.dtype )
+
+        hog_array_L = hog(img_lab[:,:,0], orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True,visualise=False, feature_vector=True)
+        hog_array_a = hog(img_lab[:,:,1], orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True,visualise=False, feature_vector=True)
+        hog_array_b = hog(img_lab[:,:,2], orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True,visualise=False, feature_vector=True)
+        hog_array = np.concatenate((hog_array_L, hog_array_a, hog_array_b), axis=0)
+        #normalized = normalize(hog_array)
+        features.append(hog_array)
+
+        '''
         # Read in each one by one
         image = imgNP
         # apply color conversion if other than 'RGB'
@@ -91,19 +106,19 @@ class Features:
             feature_image = np.copy(image)
         gray_image = cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
         # Apply bin_spatial() to get spatial color features
-        '''
+
         spatial_features = self.bin_spatial(feature_image, size=spatial_size)
         # Apply color_hist() also with a color space option now
         hist_features = self.color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
         # Call get_hog_features() with vis=False, feature_vec=True
         #t1 = time.time()
-        '''
+        # refaire un essai avec LAB hog deactiver sqrt_transform
         hog_features = self.get_hog_features(gray_image, orient,
                                             pix_per_cell, cell_per_block, vis=False, feature_vec=True)
 
         #t2 = time.time()
         #print(t2-t1,"s")
-        '''
+
         otherHogImage = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
 
         hog_featuresH = self.get_hog_features(otherHogImage[:,:,0], orient,
@@ -112,15 +127,15 @@ class Features:
                                               pix_per_cell, cell_per_block, vis=False, feature_vec=True)
         hog_featuresS = self.get_hog_features(otherHogImage[:, :, 2], orient,
                                               pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-        '''
-        # Append the new feature vector to the features list
 
-        hog_array = np.concatenate((hog_features,), axis = 0)
+        # Append the new feature vector to the features list
+        features.append(np.concatenate((spatial_features, hist_features, hog_features)))
+        # = np.concatenate((hog_features,), axis = 0)
         #normalized = normalize(hog_array.reshape(1, -1))
-        features.append(hog_array)
+        #features.append(hog_array)
         #features.append((hog_features,hog_featuresL,hog_featuresA,hog_featuresB), axis = 0)
         #print("feature shape",hog_features.shape, hog_featuresL.shape, " hog ", hog_featuresA.shape,hog_featuresB.shape)
-
+        '''
 
         # Return list of feature vectors
         return features

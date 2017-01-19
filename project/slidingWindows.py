@@ -21,6 +21,15 @@ class SlidingWindows:
         # Return the image copy with boxes drawn
         return imcopy
 
+    def draw_boxesNP(self, img, bboxes, color=(0, 0, 255), thick=6):
+            # Make a copy of the image
+            imcopy = np.copy(img)
+            # Iterate through the bounding boxes
+            for i in range(0,bboxes.shape[0]):
+                # Draw a rectangle given bbox coordinates
+                cv2.rectangle(imcopy, (bboxes[i,0],bboxes[i,1]), (bboxes[i,2],bboxes[i,3]), color, thick)
+            # Return the image copy with boxes drawn
+            return imcopy
         # Define a function that takes an image,
         # start and stop positions in both x and y,
         # window size (x and y dimensions),
@@ -87,18 +96,28 @@ class SlidingWindows:
             test=not ((self.maskROI[window[0][1], window[0][0]] == 0) and (self.maskROI[window[0][1], window[1][0]-1] == 0) and
                  (self.maskROI[window[1][1]-1, window[0][0]] == 0) and (self.maskROI[window[1][1]-1, window[1][0]-1] == 0))
         except:
-            print(window)
+            #print(window)
+            test=False
+
+        return(test)
+
+    def isWindowsInRoiNP(self,window):
+        try:
+            test=not ((self.maskROI[window[1], window[0]] == 0) and (self.maskROI[window[1], window[2]-1] == 0) and
+                 (self.maskROI[window[3]-1, window[0]] == 0) and (self.maskROI[window[3]-1, window[2]-1] == 0))
+        except:
+            #print(window)
             test=False
 
         return(test)
 
     # ajouter une polyline de ROI
-    def pyramid_windows(self,img,windows_size=(32,128)):
+    def pyramid_windows(self,img,windows_size=(32,128),overlap=0.75):
         self.initROI(img)
         window_list = []
         window_size = windows_size[0]
         while (window_size<=windows_size[1]):
-            window_list += self.slide_window( img, xy_window=(window_size, window_size), y_start_stop=[2*128, img.shape[0]])
+            window_list += self.slide_window( img, xy_window=(window_size, window_size), y_start_stop=[2*128, img.shape[0]], xy_overlap=(overlap, overlap))
             window_size = window_size + windows_size[0]
         return(window_list)
 
@@ -111,7 +130,8 @@ class SlidingWindows:
 
     def run(self):
         plt.close("all")
-        image = mpimg.imread('test_images/test1.jpg')
+        image = cv2.imread('test_images/test1.jpg')
+        image=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         self.initROI(image)
 
         windows = self.slide_window(image, x_start_stop=[None, None], y_start_stop=[None, None],
@@ -126,9 +146,9 @@ class SlidingWindows:
         windows = self.pyramid_windows(image)
         print("Windows pyramide numbers:", len(windows))
 
-        window_img = self.draw_boxes(image, windows, color=(0, 0, 255), thick=6)
+        window_img = self.draw_boxes(image, windows, color=(0, 0, 255), thick=1)
         plt.imshow(window_img)
-
+        plt.figure()
         window_ind = np.random.randint(0, len(windows))
         win =[]
         win.append(windows[window_ind])
