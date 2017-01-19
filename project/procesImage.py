@@ -1,7 +1,9 @@
 from moviepy.editor import VideoFileClip
 import numpy as np
+import pickle
 import cv2
-
+import matplotlib as mpl
+import matplotlib.cm as cm
 from skimage.feature import hog
 
 import matplotlib.pyplot as plt
@@ -22,11 +24,80 @@ class ProcessImage:
         self.clf = Classifier()
         self.SlidWin = SlidingWindows()
         self.Windows = []
+        self.exportVideo = []
 
     def load(self,img):
         self.clf.load('svcModel01.pkl')
         self.Windows = self.SlidWin.pyramid_windows(img,(64,128))
         self.feat.loadScalerFromPickle("featuresSaver01.pkl")
+
+    def debug_image2(self, img1, img2=None, img3=None, img4=None, img5=None, img6=None, img7=None):
+        # Create an image to debug
+        out_shape = (1080, 1920, 3)
+        outImg = np.zeros(out_shape, dtype=np.uint8)
+        if img1 is not None:
+            if (len(img1.shape) == 3):
+                outImg[0:720, 0:1280, :] = img1;
+            else:
+                outImg[0:720, 0:1280, 0] = img1 * 255;
+                outImg[0:720, 0:1280, 1] = img1 * 255;
+                outImg[0:720, 0:1280, 2] = img1 * 255;
+
+        if img2 is not None:
+            img2R = cv2.resize(img2, (640, 480), interpolation=cv2.INTER_CUBIC)
+            if (len(img2R.shape) == 3):
+                outImg[0:480, 1280:1280 + 640, :] = img2R;
+            else:
+                outImg[0:480, 1280:1280 + 640, 0] = img2R * 255;
+                outImg[0:480, 1280:1280 + 640, 1] = img2R * 255;
+                outImg[0:480, 1280:1280 + 640, 2] = img2R * 255;
+
+        if img3 is not None:
+            img3R = cv2.resize(img3, (640, 480), interpolation=cv2.INTER_CUBIC)
+            if (len(img3R.shape) == 3):
+                outImg[480:480 + 480, 1280:1280 + 640, :] = img3R;
+            else:
+                outImg[480:480 + 480, 1280:1280 + 640, 0] = img3R * 255;
+                outImg[480:480 + 480, 1280:1280 + 640, 1] = img3R * 255;
+                outImg[480:480 + 480, 1280:1280 + 640, 2] = img3R * 255;
+
+        if img4 is not None:
+            img4R = cv2.resize(img4, (320, 240), interpolation=cv2.INTER_CUBIC)
+            if (len(img4R.shape) == 3):
+                outImg[720:720 + 240, 0:320, :] = img4R;
+            else:
+                outImg[720:720 + 240, 0:320, 0] = img4R * 255;
+                outImg[720:720 + 240, 0:320, 1] = img4R * 255;
+                outImg[720:720 + 240, 0:320, 2] = img4R * 255;
+
+        if img5 is not None:
+            img5R = cv2.resize(img5, (320, 240), interpolation=cv2.INTER_CUBIC)
+            if (len(img5R.shape) == 3):
+                outImg[720:720 + 240, 0 + 320:320 + 320, :] = img5R;
+            else:
+                outImg[720:720 + 240, 0 + 320:320 + 320, 0] = img5R * 255;
+                outImg[720:720 + 240, 0 + 320:320 + 320, 1] = img5R * 255;
+                outImg[720:720 + 240, 0 + 320:320 + 320, 2] = img5R * 255;
+
+        if img6 is not None:
+            img6R = cv2.resize(img6, (320, 240), interpolation=cv2.INTER_CUBIC)
+            if (len(img6R.shape) == 3):
+                outImg[720:720 + 240, 0 + 320 + 320:320 + 320 + 320, :] = img6R;
+            else:
+                outImg[720:720 + 240, 0 + 320 + 320:320 + 320 + 320, 0] = img6R * 255;
+                outImg[720:720 + 240, 0 + 320 + 320:320 + 320 + 320, 1] = img6R * 255;
+                outImg[720:720 + 240, 0 + 320 + 320:320 + 320 + 320, 2] = img6R * 255;
+
+        if img7 is not None:
+            img7R = cv2.resize(img7, (320, 240), interpolation=cv2.INTER_CUBIC)
+            if (len(img7R.shape) == 3):
+                outImg[720:720 + 240, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, :] = img7R;
+            else:
+                outImg[720:720 + 240, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 0] = img7R * 255;
+                outImg[720:720 + 240, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 1] = img7R * 255;
+                outImg[720:720 + 240, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 2] = img7R * 255;
+
+        return (outImg)
 
     def testClassifier(self):
         feat = Features()
@@ -136,9 +207,24 @@ class ProcessImage:
         return self.clf.predict(scaled_X)
 
     def processImageVideo(self,imgIn):
-        wins = self.process(imgIn)
-        window_img = self.SlidWin.draw_boxes(imgIn, wins, color=(0, 255, 0), thick=2)
-        return window_img
+        wins,b = self.FullFrameMultiScaleProcess(imgIn)
+        window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
+        hot = self.hotImage(imgIn,wins,b)
+        centers, boundingBox, result, binary_output = self.hot2boundingBox(hot,imgIn)
+        imgHot = self.hot2uint8Img(hot)
+        imgOut=self.debug_image2(result,window_img,imgHot,imgIn,binary_output)
+        return imgOut
+
+    def processImageVideoExportWindows(self,imgIn):
+        wins,b = self.FullFrameMultiScaleProcess(imgIn)
+        window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
+        hot = self.hotImage(imgIn,wins,b)
+        centers, boundingBox, result, binary_output = self.hot2boundingBox(hot,imgIn)
+        imgHot = self.hot2uint8Img(hot)
+        imgOut=self.debug_image2(result,window_img,imgHot,imgIn,binary_output)
+        dict={"windows":wins, "belief":b}
+        self.exportVideo.append(dict)
+        return imgOut
 
 
     def processVideo(self,fileIn, fileOut,start=0.0,end=0.0):
@@ -151,6 +237,26 @@ class ProcessImage:
         yellow_clip1 = clip3.fl_image(self.processImageVideo)
         yellow_clip1.write_videofile(fileOut, audio=False)
         print("End Processing, write : ", fileOut)
+
+    def processVideoExportWindows(self, fileIn, fileOut, start=0.0, end=0.0):
+        print("Start Processing for exporting windows : ", fileIn)
+        video_output = 'project_videoProcessed.mp4'
+        if (start == 0.0 and end == 0.0):
+            clip3 = VideoFileClip(fileIn)  # .subclip(40,42)
+        else:
+            clip3 = VideoFileClip(fileIn).subclip(start, end)
+        yellow_clip1 = clip3.fl_image(self.processImageVideoExportWindows)
+        yellow_clip1.write_videofile(fileOut, audio=False)
+
+        print("Save to pickle")
+        file = "windows01.pkl"
+        with open(file, 'wb') as handle:
+            pickle.dump(self.exportVideo, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+        print("End Processing, write : ", fileOut)
+
+
 
 
     def run(self):
@@ -198,6 +304,62 @@ class ProcessImage:
                 j = j + 1
         plt.show()
 
+    def runMultiScaleTest(self):
+
+        image = imread('test_images/test1.jpg')
+        self.load(image)
+
+
+        self.testClassifier()
+
+        files = glob.glob('test_images/test*.jpg')
+        print(files)
+
+        f, axarr = plt.subplots(int(len(files) / 2), 2)  # , sharex=True)
+        i = 0
+        j = 0
+        for file in files:
+            image = imread(file)
+            #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            t1 = time.time()
+            wins,b = self.FullFrameMultiScaleProcess(image)
+            t2 = time.time()
+            print("time to compute ",file,":",t2-t1,"s")
+
+            print("nb windows found : ", len(wins))
+            window_img = self.SlidWin.draw_boxesNP(image, wins, color=(0, 255, 0), thick=2)
+
+            t1 = time.time()
+            hot = self.hotImage(image, wins, b)
+            t2 = time.time()
+            print("hot image generation time : ", t2 - t1, "s")
+
+            binary_output = np.zeros_like(hot)
+            binary_output[hot > 3.0] = 1
+            binary_zeros = np.zeros_like(binary_output, dtype=np.uint8)
+            color_warp = np.dstack((binary_zeros, binary_output.astype(np.uint8) * 255, binary_zeros))
+            result = cv2.addWeighted(image, 1, color_warp, 0.3, 0)
+
+            imgBox = self.SlidWin.draw_boxesNP(image, wins, color=(255, 0, 0), thick=2)
+            if(np.sum(binary_output)>1):
+                ret, thresh = cv2.threshold(binary_output.astype(np.uint8) * 255, 127, 255, 0)
+                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                for cnt in contours:
+                    x, y, w, h = cv2.boundingRect(cnt)
+                    cv2.rectangle(result, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                    M = cv2.moments(cnt)
+                    cx = int(M['m10'] / M['m00'])
+                    cy = int(M['m01'] / M['m00'])
+                    cv2.circle(result, (cx, cy), 10, (0, 0, 255), 5)
+
+
+            axarr[i, j].set_title(file)
+            axarr[i, j].imshow(result)
+            i = i + 1
+            if (i == 3):
+                i = 0
+                j = j + 1
+        plt.show()
 
 
     def run2(self):
@@ -240,47 +402,85 @@ class ProcessImage:
 
         print("Car, right predictions", nbCarPred, "/", len(data.cars))
 
-    def runVideo(self,outputFile,start,end):
+    def runVideo(self,outputFile,start=0.0,end=0.0):
 
         image = imread('test_images/test1.jpg')
         self.load(image)
         print("nb windows total : ", len(self.Windows))
 
-        self.processVideo("project_video.mp4",outputFile,start,end)
+        self.processVideoExportWindows("project_video.mp4",outputFile,start,end)
+        #self.processVideo("project_video.mp4", outputFile, start, end)
 
-    def testFullFrameMultiScaleProcess(self, rawImg):
+
+    def FullFrameMultiScaleProcess(self, rawImg):
         winAll=[];
+        beliefAll=[]
         img_lab = cv2.cvtColor(rawImg, cv2.COLOR_RGB2LAB)
         scales=[1.0,1.3,1.7,2.2,2.9]
         for scale in scales:
             topClip = int(350/scale)
             imgResized = cv2.resize(img_lab,(int(img_lab.shape[1]/scale),int(img_lab.shape[0]/scale)),interpolation = cv2.INTER_CUBIC)
-            print("imgResized.shape", imgResized.shape)
+            #print("imgResized.shape", imgResized.shape)
             f, windows = self.fullFrameHogAnalyse(imgResized, topClip, scale, 1)
             if(len(f)>0):
                 #print("f:",f)
-                print("f.len", len(f))
+                #print("f.len", len(f))
                 X = np.vstack(f).astype(np.float64)
-                print("X.shape", X.shape)
-                print("windows.shape", windows.shape)
+                #print("X.shape", X.shape)
+                #print("windows.shape", windows.shape)
                 scaled_X = self.feat.scalerTransform.transform(X)
                 yPred = self.clf.predict(scaled_X)
                 yBelief = self.clf.svc.decision_function(scaled_X)
-                winKeeped = windows[np.logical_and(yPred==1 , yBelief>0.1)]
-                print("winKeeped.shape", winKeeped.shape)
+                winKeeped = windows[np.logical_and(yPred==1 , yBelief>0.6)]
+                beliefAll.append(yBelief[np.logical_and(yPred==1 , yBelief>0.6)])
+                #print(yBelief[np.logical_and(yPred==1 , yBelief>0.6)])
+                #print("winKeeped.shape", winKeeped.shape)
                 winAll.append(winKeeped)
-                print(winKeeped)
-                imgBox = self.SlidWin.draw_boxesNP(rawImg, windows, color=(0, 255, 0), thick=1)
-                plt.figure()
-                plt.imshow(imgBox)
-                imgBox = self.SlidWin.draw_boxesNP(rawImg, winKeeped, color=(0, 255, 0), thick=2)
-                plt.figure()
-                plt.imshow(imgBox)
+                #print(winKeeped)
+                #imgBox = self.SlidWin.draw_boxesNP(rawImg, windows, color=(0, 255, 0), thick=1)
+                #plt.figure()
+                #plt.imshow(imgBox)
+                #imgBox = self.SlidWin.draw_boxesNP(rawImg, winKeeped, color=(0, 255, 0), thick=2)
+                #plt.figure()
+                #plt.imshow(imgBox)
 
         winKeepedNP = np.vstack(winAll).astype(np.int16)
-        print("winKeepedNP",winKeepedNP)
-        print("winKeepedNP.shape",winKeepedNP.shape)
-        return winKeepedNP
+        beliefKeepedNP=np.hstack(beliefAll)
+        #print("winKeepedNP",winKeepedNP)
+        #print("winKeepedNP.shape",winKeepedNP.shape)
+        return winKeepedNP,beliefKeepedNP
+
+    def hotImage(self,img, windows,belief):
+        hot = np.zeros(img.shape[:2],dtype=np.float32)
+        for i in range(0,windows.shape[0]):
+            win = windows[i,:]
+            hot[win[1]:win[3],win[0]:win[2]] += belief[i]
+        return(hot)
+    def hot2boundingBox(self,hot,image, hotThresh=3.0):
+        binary_output = np.zeros_like(hot)
+        binary_output[hot > hotThresh] = 1
+        binary_zeros = np.zeros_like(binary_output, dtype=np.uint8)
+        color_warp = np.dstack((binary_zeros, binary_output.astype(np.uint8) * 255, binary_zeros))
+        result = cv2.addWeighted(image, 1, color_warp, 0.3, 0)
+        ret, thresh = cv2.threshold(binary_output.astype(np.uint8) * 255, 127, 255, 0)
+        im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        centers=[]
+        boundingBox=[]
+        for cnt in contours:
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(result, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            M = cv2.moments(cnt)
+            cx = int(M['m10'] / M['m00'])
+            cy = int(M['m01'] / M['m00'])
+            centers.append([cx,cy])
+            boundingBox.append([x, y, w, h])
+            cv2.circle(result, (cx, cy), 10, (0, 0, 255), 5)
+        return centers, boundingBox, result, binary_output
+    def hot2uint8Img(self,hot):
+
+        imgHot = cm.hot(hot / 10)
+        imgHot = (imgHot[:, :, :3] * 255).astype(np.uint8)
+        return imgHot
 
     def testFullFrameProcess2(self):
 
@@ -289,13 +489,48 @@ class ProcessImage:
         self.load(image)
         img_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
         t1=time.time()
-        windows=self.testFullFrameMultiScaleProcess(image)
+        windows,b=self.FullFrameMultiScaleProcess(image)
         t2 = time.time()
         print("process time : ", t2-t1,"s")
+
+        t1 = time.time()
+        hot = self.hotImage(image,windows,b)
+        t2 = time.time()
+        print("hot image generation time : ", t2 - t1, "s")
+
+        binary_output = np.zeros_like(hot)
+        binary_output[hot>3.0]=1
+        binary_zeros = np.zeros_like(binary_output,dtype=np.uint8)
+        color_warp = np.dstack((binary_zeros, binary_output.astype(np.uint8)*255, binary_zeros))
+        result = cv2.addWeighted(image, 1, color_warp, 0.3, 0)
         imgBox = self.SlidWin.draw_boxesNP(image, windows, color=(255, 0, 0), thick=2)
+        ret, thresh = cv2.threshold(binary_output.astype(np.uint8)*255, 127, 255, 0)
+        im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(result, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            M = cv2.moments(cnt)
+            cx = int(M['m10'] / M['m00'])
+            cy = int(M['m01'] / M['m00'])
+            cv2.circle(result, (cx,cy), 10, (0, 0, 255), 5)
+            #print("position : ",cx,cy)
+
+        import matplotlib as mpl
+        import matplotlib.cm as cm
+        imgHot = cm.hot(hot/10)
+        print(imgHot.shape)
+        imgHot = (imgHot[:,:,:3]*255).astype(np.uint8)
+
         plt.figure()
         plt.imshow(imgBox)
-
+        plt.figure()
+        plt.imshow(hot)
+        plt.figure()
+        plt.imshow(binary_output)
+        plt.figure()
+        plt.imshow(result)
+        plt.figure()
+        plt.imshow(imgHot)
         plt.show()
 
 
@@ -341,5 +576,6 @@ class ProcessImage:
 if __name__ == "__main__":
     obj = ProcessImage()
     #obj.run()
-    #obj.runVideo("video01.mp4",23,24)
-    obj.testFullFrameProcess2()
+    obj.runVideo("video01.mp4")#,34,35)
+    #obj.testFullFrameProcess2()
+    #obj.runMultiScaleTest()
