@@ -47,7 +47,7 @@ I have tested different	kinds of features (color histogramme, reduce size image,
 I have obtain my best result with LAB color space and a HOG on each channel. 
 The feature size is 5292 for a image of 64x64 pixels. 
 
-## classification
+## Classification
 I use linearSCV classifier. I have try SCV(rbf), the score was better but the time to fit and predit was really huge. 
 So the linearSCV seem to be a good compromise.
 
@@ -59,31 +59,27 @@ I test different value for C parameter to increase score on test C, and increase
 
 My best result is with C=0.0001 :
 
-The fiting cpu load : 2.66s
+- Training duration 2.66s
 - accuracy on train 0.997
 - accuracy on test 0.992
+- confusion matrix train set: 
 
-- confusion matrix : 
-
-First Header | Second Header
------------- | -------------
-Content cell 1 | Content cell 2
-Content column 1 | Content column 2
-
-
-Train set
-----------
-8192 | 14
-30 | 7455
+ [[8192   14]
  
+ [  30 7455]]
+- confusion matrix test set: 
 
-Test set
-----------
-1450 | 13
-9 | 1298
-
-
+ [[1450   13]
  
+ [   9 1298]]
+
+
+## Sliding windows
+In a first, I generate sliding pyramid windows from size 32x32 to 128x128. 
+The windows fully outside region of interest are not append to reduce their number.
+The overlap is 0.75.
+
+![The classic pyramid windows solution](/readmeImg/classicPyramidWindows.png)
 
 sliding 2200 windows --> 10s
 
