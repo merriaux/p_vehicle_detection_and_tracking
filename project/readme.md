@@ -121,9 +121,9 @@ I threshold it:
 I use the *cv2.findcontours* function to extract shape contours. *cv2.boundingRect* return me the bouding box, 
 and cv2.moments able me to compute the centroides.
 
-The result on test image is below (green : adding of thresholded hot point):
+The result on test images is below (green : adding of thresholded hot point):
 
-![Hot point thresholded](readmeImg/multiScaleResultHotpoint.png)
+![Final results on test images](readmeImg/multiScaleResultHotpoint.png)
 
 ## video processing
 

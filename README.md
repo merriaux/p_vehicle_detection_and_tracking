@@ -1,1 +1,1 @@
-See readme un Project folder
+See readme in Project folder
