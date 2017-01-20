@@ -47,6 +47,8 @@ I have tested different	kinds of features (color histogramme, reduce size image,
 I have obtain my best result with LAB color space and a HOG on each channel. 
 The feature size is 5292 for a image of 64x64 pixels. 
 
+My parameters are : orient=9, pix_per_cell=8, cell_per_block=2
+
 ## Classification
 I use linearSCV classifier. I have try SCV(rbf), the score was better but the time to fit and predit was really huge. 
 So the linearSCV seem to be a good compromise.
@@ -75,13 +77,40 @@ My best result is with C=0.0001 :
 
 
 ## Sliding windows
-In a first, I generate sliding pyramid windows from size 32x32 to 128x128. 
+In a first, I generate sliding pyramid windows from size 32x32, 64x64, 96x96 and 128x128. 
 The windows fully outside region of interest are not append to reduce their number.
-The overlap is 0.75.
+The overlap is 0.5. I obtain 2214 windows to process.
 
-![The classic pyramid windows solution](/readmeImg/classicPyramidWindows.png)
+Example of the 2214 sliding windows with ROI :
 
-sliding 2200 windows --> 10s
+![The classic pyramid windows solution](readmeImg/classicPyramidWindowsParamStd.png)
+
+All the windows are resize to 64x64 pixels and Features extraction (LAB conversion and HOG) in the same matrix. 
+Then I normalize it and predict with SVC. All this operations are really slow, around 10s per image. 
+So I try a other idea.
+
+# sliding windows optimized
+
+the idea is the compute the HOG on the whole image and slide windows in feature directly (without ravel !).
+For a 64x64 image, a single channel HOG feature shape is [7,7,2,2,9] x 3 channels.
+So in the whole HOG image a select [7,7,2,2,9] features and reshape its to line (with *.ravel()* function).
+I sliding this "windows" for each pix_per_cell, so the overlap is 7/8. I concatenate all in one matrix, to normalize and predict.
+For multiscale search, I resize the whole image before HOG extraction.
+Actualy I do it for 5 different scale factors : [1.0,1.3,1.7,2.2,2.9] it correspond to 64x64, 83x83, 108x108, 140x140 and 185x185 window sizes.
+
+Of course I kept the ROI to reduce the number of windows.
+With this parameters, the total number of windows is 10898 (A huge overlap !).
+The cpu time to compute one image (1280x720) is around 2s, so really more efficency than my first sliding windows/features implemantation.
+
+
+To reduce the number of false positif, I compute and threshold on *decision_function*.
+
+The result on test images is below:
+![The detection result on test images is below](readmeImg/multiScaleResult.png)
+
+
+
+
 
 
 
