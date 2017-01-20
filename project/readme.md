@@ -113,6 +113,7 @@ The result on test images is below:
 All the windows for the same car have to be merge in only one bounding box.
 
 For that I use a "*hot point*" image. In a float image, I add the *decision_function* on each windows. And I obtain this kind of result :
+![Origine image](ProcessTest1.png)
 ![Hot point](readmeImg/hotpoint.png)
 
 I threshold it:
