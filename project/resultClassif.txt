@@ -81,3 +81,20 @@ confusion matrix Train:
 confusion matrix Test:
  [[1506   11]
  [  15 1238]]
+
+ C=0.0001
+ feature shape (15691, 5292)
+0.7032253742218018 Seconds to load features.
+2.6687514781951904 Seconds to train classifier.
+accuracy on train 0.997195844752
+accuracy on test 0.992057761733
+0.17062807083129883 Seconds to test classifier.
+accuracy on train 0.997195844752
+accuracy on test 0.992057761733
+0.17764854431152344 Seconds to test classifier.
+confusion matrix Train:
+ [[8192   14]
+ [  30 7455]]
+confusion matrix Test:
+ [[1450   13]
+ [   9 1298]]

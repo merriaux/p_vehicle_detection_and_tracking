@@ -143,10 +143,10 @@ class SlidingWindows:
         #plt.show()
         plt.figure()
 
-        windows = self.pyramid_windows(image)
+        windows = self.pyramid_windows(image,windows_size=(32,128),overlap=0.5)
         print("Windows pyramide numbers:", len(windows))
 
-        window_img = self.draw_boxes(image, windows, color=(0, 0, 255), thick=1)
+        window_img = self.draw_boxes(image, windows, color=(0, 0, 255), thick=3)
         plt.imshow(window_img)
         plt.figure()
         window_ind = np.random.randint(0, len(windows))

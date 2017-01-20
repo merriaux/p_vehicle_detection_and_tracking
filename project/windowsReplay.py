@@ -1,4 +1,5 @@
 import pickle
+import cv2
 
 class windowsReplay:
     def __init__(self):
@@ -10,6 +11,7 @@ class windowsReplay:
 
 
     def run(self):
+        print(cv2.__version__)
         self.load("windows01.pkl")
         print("nb frame:",len(self.exportVideo))
 

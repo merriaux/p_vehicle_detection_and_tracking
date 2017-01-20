@@ -17,7 +17,7 @@ from features import Features
 
 class Classifier:
     def __init__(self):
-        self.svc = LinearSVC(C=0.0001)
+        self.svc = LinearSVC(C=0.0001)#C=0.0001)
 
 
     def train(self,x,y):

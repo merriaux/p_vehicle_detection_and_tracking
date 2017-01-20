@@ -470,11 +470,12 @@ class ProcessImage:
             x, y, w, h = cv2.boundingRect(cnt)
             cv2.rectangle(result, (x, y), (x + w, y + h), (0, 0, 255), 2)
             M = cv2.moments(cnt)
-            cx = int(M['m10'] / M['m00'])
-            cy = int(M['m01'] / M['m00'])
-            centers.append([cx,cy])
-            boundingBox.append([x, y, w, h])
-            cv2.circle(result, (cx, cy), 10, (0, 0, 255), 5)
+            if(M['m00']!=0):
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
+                centers.append([cx,cy])
+                boundingBox.append([x, y, w, h])
+                cv2.circle(result, (cx, cy), 10, (0, 0, 255), 5)
         return centers, boundingBox, result, binary_output
     def hot2uint8Img(self,hot):
 
@@ -576,6 +577,6 @@ class ProcessImage:
 if __name__ == "__main__":
     obj = ProcessImage()
     #obj.run()
-    obj.runVideo("video01.mp4")#,34,35)
-    #obj.testFullFrameProcess2()
+    #obj.runVideo("video01.mp4")#,34,35)
+    obj.testFullFrameProcess2()
     #obj.runMultiScaleTest()

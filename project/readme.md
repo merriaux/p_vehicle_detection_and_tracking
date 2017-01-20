@@ -10,8 +10,8 @@ There are few functions to explore the dataset as display images, statistics abo
 - **features.py** :
 From *loadData*, compute features for each sample, the whole feature is normalize. 
 The dataset is randomized and splited in train and test set.
-Store the features result in pickle file. 
-Also store the normalizer in a pickle file.
+Dump the features result in pickle file. 
+Also dump the scaler (sklearn.preprocessing.StandardScaler) in a pickle file.
 
 - **classif.py** :
 From *features*, implement SVC to classify features. 
@@ -50,7 +50,7 @@ The feature size is 5292 for a image of 64x64 pixels.
 My parameters are : orient=9, pix_per_cell=8, cell_per_block=2
 
 ## Classification
-I use linearSCV classifier. I have try SCV(rbf), the score was better but the time to fit and predit was really huge. 
+I use linearSCV classifier. The feature are normalize with *sklearn.preprocessing.StandardScaler*. I have tried SCV(rbf), the score was better but the time to fit and predit was really huge. 
 So the linearSCV seem to be a good compromise.
 
 With C=1 the result is :
@@ -109,58 +109,29 @@ The result on test images is below:
 ![The detection result on test images is below](readmeImg/multiScaleResult.png)
 
 
+## windows merging
+All the windows for the same car have to be merge in only one bounding box.
+
+For that I use a "*hot point*" image. In a float image, I add the *decision_function* on each windows. And I obtain this kind of result :
+![Hot point](readmeImg/hotpoint.png)
+
+I threshold it:
+![Hot point thresholded](readmeImg/hotpointThreshold.png)
+
+I use the *cv2.findcontours* function to extract shape contours. *cv2.boundingRect* return me the bouding box, 
+and cv2.moments able me to compute the centroides.
+
+The result on test image is below (green : adding of thresholded hot point):
+
+![Hot point thresholded](readmeImg/multiScaleResultHotpoint.png)
+
+## video processing
+
+I have processed the project video with this pipeline and the result is not soo bad. The processed video is here: https://www.youtube.com/watch?v=PLFG7eKJ17o
+
+It have some time a false positive, so I will implement a tracking solution for label the car and remove if their age are young.
+
+## tracking
 
 
-
-
-
-Criteria 	Meets Specifications
-
-Have the HOG features been extracted from the training images?
-	
-
-The skimage.features.hog() function or other method has been used to extract HOG features from the labeled training images provided.
-
-Were the parameters used to extract HOG features explained / justified?
-	
-
-The reasoning for the choices of parameters used for HOG feature extraction (orientations, pixels_per_cell, cells_per_block) has been explained.
-
-Has a classifier been trained using HOG features (and optionally additional color/histogram features)?	
-	
-The HOG features extracted from the training data have been used to train a classifier, could be SVM, Decision Tree or other. Features should be scaled to zero mean and unit variance before training the classifier.
-
-Sliding Window Search
-Criteria 	Meets Specifications
-
-Has a sliding-window technique been implemented to search for vehicles in the test images?
-	
-
-A sliding window approach has been implemented, where overlapping tiles in each test image are classified as vehicle or non-vehicle. Some justification has been given for the particular implementation chosen.
-
-Video Implementation
-Criteria 	Meets Specifications
-
-Has the pipeline been used to process the example videos and identify vehicles in each frame?
-	
-
-The sliding-window search plus classifier has been used to search for and identify vehicles in the videos provided. Video output has been generated with detected vehicle positions drawn on each frame of video.
-
-Has some sort of filtering mechanism been implemented to reject false positives? Does the method reduce the number of false positives?
-	
-
-A method, such as requiring that a detection be found at or near the same position in several subsequent frames, (could be a heat map showing the location of repeat detections) is implemented as a means of rejecting false positives, and this demonstrably reduces the number of false positives.
-
-README
-Criteria 	Meets Specifications
-
-Has a Readme file been included that describes in detail the steps taken to construct the pipeline, techniques used, areas where improvements could be made?
-	
-
-The Readme file submitted with this project includes a detailed description of what steps were taken to achieve the result, what techniques were used to arrive at a successful result, what could be improved about their algorithm/pipeline, and what hypothetical cases would cause their pipeline to fail.
-
-
-Run :
-- features.py
-- classif.py
-- processImage.py
+### final video
