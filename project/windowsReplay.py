@@ -1,7 +1,7 @@
 import pickle
 import cv2
 
-class windowsReplay:
+class WindowsReplay:
     def __init__(self):
         self.exportVideo = []
 
@@ -17,5 +17,5 @@ class windowsReplay:
 
 
 if __name__ == "__main__":
-    obj = windowsReplay()
+    obj = WindowsReplay()
     obj.run()

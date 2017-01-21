@@ -16,7 +16,7 @@ Also dump the scaler (sklearn.preprocessing.StandardScaler) in a pickle file.
 - **classif.py** :
 From *features*, implement SVC to classify features. 
 The SVC class is saved in file with sklearn.externals.joblib
-few functions, to compute the score on test and train set, display confusion matrix and plot SVC coefficients and feature index. (To détermine each ones are significant).
+few functions, to compute the score on test and train set, display confusion matrix and plot SVC coefficients and feature index. (To determine each ones are significant).
 
 - **slidingWindows.py** : 
 Sliding windows implementation, with region of interest in the image. 
@@ -122,7 +122,7 @@ I threshold it:
 I use the *cv2.findcontours* function to extract shape contours. *cv2.boundingRect* return me the bouding box, 
 and cv2.moments able me to compute the centroides.
 
-The result on test images is below (green : adding of thresholded hot point):
+The results on test images is below (green : adding of thresholded hot point):
 
 ![Final results on test images](readmeImg/multiScaleResultHotpoint.png)
 

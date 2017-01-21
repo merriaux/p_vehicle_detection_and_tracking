@@ -1,3 +1,5 @@
+from object_tracker import Vehicle, Tracker
+
 from moviepy.editor import VideoFileClip
 import numpy as np
 import pickle
@@ -16,6 +18,7 @@ from features import Features
 from classif import Classifier
 from slidingWindows import SlidingWindows
 from sklearn.preprocessing import StandardScaler
+from windowsReplay import WindowsReplay
 import time
 
 class ProcessImage:
@@ -25,6 +28,9 @@ class ProcessImage:
         self.SlidWin = SlidingWindows()
         self.Windows = []
         self.exportVideo = []
+        self.windowsReplay = WindowsReplay()
+        self.tracker = Tracker()
+        self.frameNumber = 0
 
     def load(self,img):
         self.clf.load('svcModel01.pkl')
@@ -178,7 +184,7 @@ class ProcessImage:
                 win[winIdx, 1] = np.int16((topClip+i * 8)*scale)
                 win[winIdx, 2] = np.int16((j * 8 + 64)*scale)
                 win[winIdx, 3] = np.int16((topClip+i * 8 + 64)*scale)
-                #TODO problem de positionnment des fenetres avec le multi-echelle --> problem ci dessous
+
                 if(self.SlidWin.isWindowsInRoiNP(win[winIdx,:])):
                     fL = hog_array_L[i:i + 7, j:j + 7, :, :, :].ravel();
                     fA = hog_array_A[i:i + 7, j:j + 7, :, :, :].ravel();
@@ -226,6 +232,19 @@ class ProcessImage:
         self.exportVideo.append(dict)
         return imgOut
 
+    def processImageVideoImportWindows(self,imgIn):
+        wins=self.windowsReplay.exportVideo[self.frameNumber]["windows"]
+        b = self.windowsReplay.exportVideo[self.frameNumber]["belief"]
+        #print("frame : ",self.frameNumber)
+        #print("wins : ", wins,"b",b)
+
+        window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
+        hot = self.hotImage(imgIn,wins,b)
+        centers, boundingBox, result, binary_output = self.hot2boundingBox(hot,imgIn)
+        imgHot = self.hot2uint8Img(hot)
+        imgOut=self.debug_image2(result,window_img,imgHot,imgIn,binary_output)
+        self.frameNumber+=1
+        return imgOut
 
     def processVideo(self,fileIn, fileOut,start=0.0,end=0.0):
         print("Start Processing : ", fileIn)
@@ -256,7 +275,19 @@ class ProcessImage:
 
         print("End Processing, write : ", fileOut)
 
+    def processVideoImportWindows(self, fileIn, fileOut, start=0.0, end=0.0):
+        print("Start Processing with importing windows : ", fileIn)
+        self.frameNumber = int(start*25); # quite approximative
+        self.windowsReplay.load("windows01.pkl")
+        video_output = 'project_videoProcessed.mp4'
+        if (start == 0.0 and end == 0.0):
+            clip3 = VideoFileClip(fileIn)  # .subclip(40,42)
+        else:
+            clip3 = VideoFileClip(fileIn).subclip(start, end)
+        yellow_clip1 = clip3.fl_image(self.processImageVideoImportWindows)
+        yellow_clip1.write_videofile(fileOut, audio=False)
 
+        print("End Processing, write : ", fileOut)
 
 
     def run(self):
@@ -408,7 +439,7 @@ class ProcessImage:
         self.load(image)
         print("nb windows total : ", len(self.Windows))
 
-        self.processVideoExportWindows("project_video.mp4",outputFile,start,end)
+        self.processVideoImportWindows("project_video.mp4",outputFile,start,end)
         #self.processVideo("project_video.mp4", outputFile, start, end)
 
 
@@ -577,6 +608,6 @@ class ProcessImage:
 if __name__ == "__main__":
     obj = ProcessImage()
     #obj.run()
-    #obj.runVideo("video01.mp4")#,34,35)
-    obj.testFullFrameProcess2()
+    obj.runVideo("video01.mp4",34,35)
+    #obj.testFullFrameProcess2()
     #obj.runMultiScaleTest()
