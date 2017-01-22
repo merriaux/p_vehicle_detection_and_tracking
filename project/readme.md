@@ -193,6 +193,8 @@ A lot things I think !
 
 Tracking could be improved with quite logic. For example, to don't merge two vehicles in one when they are superimposed. 
 
+Using of 2D Kalman filter for the vehicle tracking
+
 # Acknowledgements
 
 All the slack community and particulary *Kyle Stewart-Frantz* !
