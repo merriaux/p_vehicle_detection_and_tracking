@@ -49,7 +49,10 @@ If you want the run the project, run in this order :
 # Project conception and details
 
 ## features extraction	
-I have tested different	kinds of features (color histogramme, reduce size image, histogram of gradient), in few color spaces (RGB, HSV, LUV, HLS, YUV and LAB). 
+I have tested different	kinds of features (color histogram, reduce size image, histogram of gradient), in few color spaces (RGB, HSV, LUV, HLS, YUV and LAB). 
+I plot the svc._coef to seem each feature value. I sort then by importance. 
+With this method, I have seen that color histogram is always the less efficient to desminate our two class (car and no-car). 
+And reduce size image is always lower importance than HOG. So I test HOG in different channels of different color spaces.
 I have obtain my best result with LAB color space and a HOG on each channel. 
 The feature size is 5292 for a image of 64x64 pixels. 
 
