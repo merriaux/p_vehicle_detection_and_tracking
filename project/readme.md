@@ -31,7 +31,7 @@ All the processing step for test images, and video conversion.
 - **windowsReplay.py** :
 To experimente the tracking algorithm, I have recorded all the sliding windows predited car for each video frame in pickle file, and use it to tume tracking parameter.
 
-- ** object_tracker.py** :
+- **object_tracker.py** :
 Vehicles tracking implementation with a GNN algorithm (Global nearest neighbor  http://www.control.isy.liu.se/student/graduate/TargetTracking/Lecture5.pdf).
 
 - **laneDetection.py** :
@@ -155,17 +155,17 @@ I just refactorize my project 4 code in *LaneDetection* class, and run it from i
 
 # final video
 The final result seem to be nice. 
-The video file is pushed in Git : *videoOutputFinalProject.mp4*
+The video file is pushed in Git : *videoOutputFinalProject.mp4*.
 It could be also find here : https://www.youtube.com/watch?v=GRynrQc-2_M
 
 
-Decription of each "debug video" patchwork :
+Description of each "debug video" patchwork :
 
 1. The final output with averaged tracking position/bounding box and car labeling
 2. The ouput of fincontour and centroide extraction (from hotPoint segmentation)
 3. The predicted sliding windows result
 4. Hotpoint image
-5. Segment hotpoint image
+5. Segmented hotpoint image
 6. The original input image
 7. Lines search (project 4)
 8. Unwrapped perspective image (project 4)
@@ -176,6 +176,8 @@ Decription of each "debug video" patchwork :
 
 ![Result video description](readmeImg/finalVideoDescription.png)
 
-Tracking could be improve with quite logic, to don't merge two vehicles in same one when they are Superimposed. 
+# Improvements
+
+Tracking could be improve with quite logic. For example, to don't merge two vehicles in same one when they are Superimposed. 
 
 
