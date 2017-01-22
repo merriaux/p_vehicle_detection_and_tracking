@@ -193,4 +193,6 @@ A lot things I think !
 
 Tracking could be improved with quite logic. For example, to don't merge two vehicles in one when they are superimposed. 
 
+# Acknowledgements
 
+All the slack community and particulary *Kyle Stewart-Frantz* !
