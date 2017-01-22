@@ -19,6 +19,7 @@ from classif import Classifier
 from slidingWindows import SlidingWindows
 from sklearn.preprocessing import StandardScaler
 from windowsReplay import WindowsReplay
+from laneDetection import LaneDetection
 import time
 
 
@@ -32,13 +33,14 @@ class ProcessImage:
         self.windowsReplay = WindowsReplay()
         self.tracker = Tracker()
         self.frameNumber = 0
-
+        self.laneDetection = LaneDetection()
+        self.laneDetection.loadCalibration()
     def load(self, img):
         self.clf.load('svcModel01.pkl')
         self.Windows = self.SlidWin.pyramid_windows(img, (64, 128))
         self.feat.loadScalerFromPickle("featuresSaver01.pkl")
 
-    def debug_image2(self, img1, img2=None, img3=None, img4=None, img5=None, img6=None, img7=None):
+    def debug_image2(self, img1, img2=None, img3=None, img4=None, img5=None, img6=None, img7=None, img8=None, img9=None, img10=None, img11=None):
         # Create an image to debug
         out_shape = (1080, 1920, 3)
         outImg = np.zeros(out_shape, dtype=np.uint8)
@@ -98,11 +100,49 @@ class ProcessImage:
         if img7 is not None:
             img7R = cv2.resize(img7, (320, 180), interpolation=cv2.INTER_CUBIC)
             if (len(img7R.shape) == 3):
-                outImg[720:720 + 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, :] = img7R
+                outImg[720:720 +180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, :] = img7R
             else:
                 outImg[720:720 + 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 0] = img7R * 255
                 outImg[720:720 + 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 1] = img7R * 255
                 outImg[720:720 + 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 2] = img7R * 255
+
+        # add new images
+        if img8 is not None:
+            img8R = cv2.resize(img8, (320, 180), interpolation=cv2.INTER_CUBIC)
+            if (len(img8R.shape) == 3):
+                outImg[720+180720+180 + 180, 0:320, :] = img8R
+            else:
+                outImg[720+180:720+180 + 180, 0:320, 0] = img8R * 255
+                outImg[720+180:720+180 + 180, 0:320, 1] = img8R * 255
+                outImg[720+180:720+180 + 180, 0:320, 2] = img8R * 255
+
+        if img9 is not None:
+            img9R = cv2.resize(img9, (320, 180), interpolation=cv2.INTER_CUBIC)
+            if (len(img9R.shape) == 3):
+                outImg[720+180:720+180 + 180, 0 + 320:320 + 320, :] = img9R
+            else:
+                outImg[720+180:720+180 + 180, 0 + 320:320 + 320, 0] = img9R * 255
+                outImg[720+180:720+180 + 180, 0 + 320:320 + 320, 1] = img9R * 255
+                outImg[720+180:720+180 + 180, 0 + 320:320 + 320, 2] = img9R * 255
+
+        if img10 is not None:
+            img10R = cv2.resize(img10, (320, 180), interpolation=cv2.INTER_CUBIC)
+            if (len(img10R.shape) == 3):
+                outImg[720+180:720 + 180+180, 0 + 320 + 320:320 + 320 + 320, :] = img10R
+            else:
+                outImg[720+180:720 + 180+180, 0 + 320 + 320:320 + 320 + 320, 0] = img10R * 255
+                outImg[720+180:720 + 180+180, 0 + 320 + 320:320 + 320 + 320, 1] = img10R * 255
+                outImg[720+180:720 + 180+180, 0 + 320 + 320:320 + 320 + 320, 2] = img10R * 255
+
+        if img11 is not None:
+            img11R = cv2.resize(img11, (320, 180), interpolation=cv2.INTER_CUBIC)
+            if (len(img11R.shape) == 3):
+                outImg[720+180:720 +180+ 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, :] = img11R
+            else:
+                outImg[720+180:720 +180+ 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 0] = img11R * 255
+                outImg[720+180:720 +180+ 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 1] = img11R * 255
+                outImg[720+180:720 +180+ 180, 0 + 320 + 320 + 320:320 + 320 + 320 + 320, 2] = img11R * 255
+
 
         return (outImg)
 
@@ -234,27 +274,33 @@ class ProcessImage:
         b = self.windowsReplay.exportVideo[self.frameNumber]["belief"]
         # print("frame : ",self.frameNumber)
         # print("wins : ", wins,"b",b)
-
+        imgLane, imgHisto, imgSearchLine, unwarpImgLines, imgLinesExtracted, imgLine = self.laneDetection.process_image(imgIn)
         window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
         hot = self.hotImage(imgIn, wins, b)
         centers, boundingBox, result, binary_output = self.hot2boundingBox(hot, imgIn)
         self.tracker.newDetection(centers,boundingBox)
-        imgTracker = self.tracker2img(imgIn)
+        imgTracker = self.tracker2img(imgLane)
         imgHot = self.hot2uint8Img(hot)
-        imgOut = self.debug_image2(result, window_img, imgTracker, imgHot, imgIn, binary_output)
+        imgOut = self.debug_image2(imgTracker, result, window_img, imgHot, imgIn ,imgSearchLine , unwarpImgLines ,binary_output,None, imgHisto,imgLinesExtracted)
         self.frameNumber += 1
         return imgOut
 
     def tracker2img(self,img):
         p,bb = self.tracker.getTrackingResult()
         imgT=np.copy(img)
+        index=0
         for center in p:
             cx,cy=center
             cv2.circle(imgT, (cx, cy), 10, (0, 0, 255), 5)
+            strP = "%d" % (index)
+            cv2.line(imgT,(cx,cy),(cx+80,cy-100),(255, 255, 255),3)
+            cv2.line(imgT, (cx + 80+20, cy-100), (cx+80,cy-100), (255, 255, 255), 3)
+            cv2.putText(imgT, strP, (cx + 80+20+5, cy-100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255))
+            index += 1
         for bBox in bb:
             x,y,w,h = bBox
             cv2.rectangle(imgT, (x, y), (x + w, y + h), (0, 0, 255), 2)
-
+        # ecrire les numéros sur l'image
         return imgT
 
     def processVideo(self, fileIn, fileOut, start=0.0, end=0.0):
@@ -442,7 +488,7 @@ class ProcessImage:
         print("nb windows total : ", len(self.Windows))
 
         self.processVideoImportWindows("project_video.mp4", outputFile, start, end)
-        # self.processVideo("project_video.mp4", outputFile, start, end)
+
 
     def FullFrameMultiScaleProcess(self, rawImg):
         winAll = [];

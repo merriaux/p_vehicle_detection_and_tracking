@@ -1,5 +1,5 @@
 
-# Project sources files 
+# Project sources files description
 
 The project is composed of different python class :
 

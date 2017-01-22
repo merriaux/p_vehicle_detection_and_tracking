@@ -12,7 +12,7 @@ class Object:
         self.distanceThreshold = 50;
         self.ageThreshold = 5;
 
-        self.MeanFrameNumber = 5
+        self.MeanFrameNumber = 10
         self.listBoundingBox =[]
         self.listPosition = []
         self.listPosition.append(_position)
@@ -40,8 +40,8 @@ class Object:
             if (len(self.listPosition) > self.MeanFrameNumber):
                 self.listPosition.pop(0)
             self.age+=1
-            if(self.age>self.ageThreshold):
-                self.age = self.ageThreshold
+            if(self.age>self.ageThreshold*2):
+                self.age = self.ageThreshold*2
         else:
             self.age -= 1
             if (self.age < 0):
@@ -72,6 +72,10 @@ class Tracker:
 
     def newDetection(self,targets,bBoxs):
         if(len(targets)==0):
+            for car in self.cars:
+                car.age-=1
+                if(car.age==0):
+                    self.cars.remove(car)
             return
         if(len(self.cars)==0):
             for i in range (0, len(targets)):
@@ -87,6 +91,19 @@ class Tracker:
             # remove age = 0
             self.cars = [i for j, i in enumerate(self.cars) if j not in toRemove]
 
+            # search for car with same target
+            for i in range(0,len(targets)):
+                t=[]
+                for car in self.cars:
+                    if(car.targetIndex == i):
+                        t.append(car)
+                while(len(t)>1): # faut supprimer quelque chose
+                    if(t[0].age<t[1].age):
+                        self.cars.remove(t[0])
+                        t.pop(0)
+                    else:
+                        self.cars.remove(t[1])
+                        t.pop(1)
             # create new vehicule for target not allocated
             for i in range(0,len(targets)):
                 findIt = False
@@ -102,7 +119,7 @@ class Tracker:
         pos = []
         bBox = []
         for car in self.cars:
-            if(car.age==car.ageThreshold):
+            if car.age>=car.ageThreshold:
                 p,bb=car.getPosition()
                 pos.append(p)
                 bBox.append(bb)
