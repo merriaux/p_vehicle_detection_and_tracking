@@ -260,14 +260,20 @@ class ProcessImage:
 
         return self.clf.predict(scaled_X)
 
-    # first function to process video frame
+    # function to process video frame / car detection and lane extraction
     def processImageVideo(self, imgIn):
         wins, b = self.FullFrameMultiScaleProcess(imgIn)
         window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
+        imgLane, imgHisto, imgSearchLine, unwarpImgLines, imgLinesExtracted, imgLine = self.laneDetection.process_image(
+            imgIn)
         hot = self.hotImage(imgIn, wins, b)
         centers, boundingBox, result, binary_output = self.hot2boundingBox(hot, imgIn)
+        self.tracker.newDetection(centers, boundingBox)
+        imgTracker = self.tracker2img(imgLane)
         imgHot = self.hot2uint8Img(hot)
-        imgOut = self.debug_image2(result, window_img, imgHot, imgIn, binary_output)
+        imgOut = self.debug_image2(imgTracker, result, window_img, imgHot, imgIn, imgSearchLine, unwarpImgLines,
+                                   binary_output, None, imgHisto, imgLinesExtracted)
+        self.frameNumber += 1
         return imgOut
 
     # function to process video frame and export windows classification result to be dumped
@@ -320,6 +326,8 @@ class ProcessImage:
     # process video
     def processVideo(self, fileIn, fileOut, start=0.0, end=0.0):
         print("Start Processing : ", fileIn)
+        self.frameNumber = int(start * 25);  # quite approximative
+
         if (start == 0.0 and end == 0.0):
             clip3 = VideoFileClip(fileIn)  # .subclip(40,42)
         else:
@@ -501,13 +509,15 @@ class ProcessImage:
 
         print("Car, right predictions", nbCarPred, "/", len(data.cars))
 
+    # video process
     def runVideo(self, outputFile, start=0.0, end=0.0):
 
         image = imread('test_images/test1.jpg')
         self.load(image)
         print("nb windows total : ", len(self.Windows))
 
-        self.processVideoImportWindows("project_video.mp4", outputFile, start, end)
+        #self.processVideoImportWindows("project_video.mp4", outputFile, start, end)
+        self.processVideo("project_video.mp4", outputFile, start, end)
 
     # use fullFrameHogAnalyse for multi scale to evaluate differents sliding windows size
     def FullFrameMultiScaleProcess(self, rawImg):
