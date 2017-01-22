@@ -587,7 +587,7 @@ class ProcessImage:
         imgHot = (imgHot[:, :, :3] * 255).astype(np.uint8)
         return imgHot
 
-    # test hot imahe implementation
+    # test hot image implementation
     def testFullFrameProcess2(self):
 
         image = imread('test_images/test1.jpg')
