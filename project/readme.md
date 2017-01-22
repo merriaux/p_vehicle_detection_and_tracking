@@ -160,6 +160,7 @@ It could be also find here : https://www.youtube.com/watch?v=GRynrQc-2_M
 
 
 Decription of each "debug video" patchwork :
+
 1. The final output with averaged tracking position/bounding box and car labeling
 2. The ouput of fincontour and centroide extraction (from hotPoint segmentation)
 3. The predicted sliding windows result
