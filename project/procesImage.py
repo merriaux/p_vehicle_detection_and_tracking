@@ -1,3 +1,5 @@
+# All the processing steps for test images, and video conversion.
+
 from object_tracker import Vehicle, Tracker
 
 from moviepy.editor import VideoFileClip
@@ -35,11 +37,14 @@ class ProcessImage:
         self.frameNumber = 0
         self.laneDetection = LaneDetection()
         self.laneDetection.loadCalibration()
+
+    # load classifier, scaler, compute pyramide windows list
     def load(self, img):
         self.clf.load('svcModel01.pkl')
         self.Windows = self.SlidWin.pyramid_windows(img, (64, 128))
         self.feat.loadScalerFromPickle("featuresSaver01.pkl")
 
+    # used to concatenate images for debug video
     def debug_image2(self, img1, img2=None, img3=None, img4=None, img5=None, img6=None, img7=None, img8=None, img9=None, img10=None, img11=None):
         # Create an image to debug
         out_shape = (1080, 1920, 3)
@@ -146,6 +151,8 @@ class ProcessImage:
 
         return (outImg)
 
+
+    # test classifier to be sur, than the reload was ok (need to load features for that)
     def testClassifier(self):
         feat = Features()
         feat.loadFromPickle("features01.pkl")
@@ -154,6 +161,7 @@ class ProcessImage:
         print("accuracy on test", self.clf.eval(feat.X_test, feat.y_test))
         t2 = time.time()
 
+    # simple process image, return the positive windows list
     def process(self, img):
         winCarDetected = []
         for win in self.Windows:
@@ -180,6 +188,7 @@ class ProcessImage:
                 # print('featurelen = ', len(f), "X.shape", X.shape, 'y=', yPred)
         return winCarDetected
 
+    # compute heat map (or hot point)
     def computeWeightImg(self, winCarDetected, weightWinCarDetected, shape):
         img = np.zeros(shape[0:2], dtype=np.float32)
 
@@ -191,6 +200,8 @@ class ProcessImage:
 
         return img
 
+    # compute HOG and the whole image, return features and windows coordinate for all sliding windows of this scale
+    # step able tune overlap, 1 = 7/8
     # image already converted to LAB color space
     def fullFrameHogAnalyse(self, img, topClip=0, scale=1.0, step=1):
         features = []
@@ -233,7 +244,7 @@ class ProcessImage:
 
         win = win[0:winIdx, :]
         return features, win
-
+    # feature compute, predict and scale a windows of 64x64 (not use in the fast compute version)
     def process64x64img(self, img):
 
         f = self.feat.extract_featuresImgNP(img, cspace='HLS', spatial_size=(32, 32),
@@ -249,6 +260,7 @@ class ProcessImage:
 
         return self.clf.predict(scaled_X)
 
+    # first function to process video frame
     def processImageVideo(self, imgIn):
         wins, b = self.FullFrameMultiScaleProcess(imgIn)
         window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
@@ -258,6 +270,7 @@ class ProcessImage:
         imgOut = self.debug_image2(result, window_img, imgHot, imgIn, binary_output)
         return imgOut
 
+    # function to process video frame and export windows classification result to be dumped
     def processImageVideoExportWindows(self, imgIn):
         wins, b = self.FullFrameMultiScaleProcess(imgIn)
         window_img = self.SlidWin.draw_boxesNP(imgIn, wins, color=(0, 255, 0), thick=2)
@@ -268,7 +281,7 @@ class ProcessImage:
         dict = {"windows": wins, "belief": b}
         self.exportVideo.append(dict)
         return imgOut
-
+    # process video frame, tune tracking, predict windows result is load from windowsReplay class
     def processImageVideoImportWindows(self, imgIn):
         wins = self.windowsReplay.exportVideo[self.frameNumber]["windows"]
         b = self.windowsReplay.exportVideo[self.frameNumber]["belief"]
@@ -285,6 +298,7 @@ class ProcessImage:
         self.frameNumber += 1
         return imgOut
 
+    # draw tracker result in a image
     def tracker2img(self,img):
         p,bb = self.tracker.getTrackingResult()
         imgT=np.copy(img)
@@ -303,6 +317,7 @@ class ProcessImage:
         # ecrire les numéros sur l'image
         return imgT
 
+    # process video
     def processVideo(self, fileIn, fileOut, start=0.0, end=0.0):
         print("Start Processing : ", fileIn)
         if (start == 0.0 and end == 0.0):
@@ -313,6 +328,7 @@ class ProcessImage:
         yellow_clip1.write_videofile(fileOut, audio=False)
         print("End Processing, write : ", fileOut)
 
+    # process video to dum windows prediction results
     def processVideoExportWindows(self, fileIn, fileOut, start=0.0, end=0.0):
         print("Start Processing for exporting windows : ", fileIn)
         if (start == 0.0 and end == 0.0):
@@ -329,6 +345,7 @@ class ProcessImage:
 
         print("End Processing, write : ", fileOut)
 
+    # process video, and use windowsReplay to tune tracking parameters
     def processVideoImportWindows(self, fileIn, fileOut, start=0.0, end=0.0):
         print("Start Processing with importing windows : ", fileIn)
         self.frameNumber = int(start * 25);  # quite approximative
@@ -341,6 +358,8 @@ class ProcessImage:
         yellow_clip1.write_videofile(fileOut, audio=False)
 
         print("End Processing, write : ", fileOut)
+
+    # bellow a lots of run function to test and debug my code
 
     def run(self):
 
@@ -387,6 +406,7 @@ class ProcessImage:
                 j = j + 1
         plt.show()
 
+    # process test images
     def runMultiScaleTest(self):
 
         image = imread('test_images/test1.jpg')
@@ -489,7 +509,7 @@ class ProcessImage:
 
         self.processVideoImportWindows("project_video.mp4", outputFile, start, end)
 
-
+    # use fullFrameHogAnalyse for multi scale to evaluate differents sliding windows size
     def FullFrameMultiScaleProcess(self, rawImg):
         winAll = [];
         beliefAll = []
@@ -529,6 +549,7 @@ class ProcessImage:
         # print("winKeepedNP.shape",winKeepedNP.shape)
         return winKeepedNP, beliefKeepedNP
 
+    # coompute (heat map)
     def hotImage(self, img, windows, belief):
         hot = np.zeros(img.shape[:2], dtype=np.float32)
         for i in range(0, windows.shape[0]):
@@ -536,6 +557,7 @@ class ProcessImage:
             hot[win[1]:win[3], win[0]:win[2]] += belief[i]
         return (hot)
 
+    # compute center and bouding box from heat map
     def hot2boundingBox(self, hot, image, hotThresh=3.0):
         binary_output = np.zeros_like(hot)
         binary_output[hot > hotThresh] = 1
@@ -558,12 +580,14 @@ class ProcessImage:
                 cv2.circle(result, (cx, cy), 10, (0, 0, 255), 5)
         return centers, boundingBox, result, binary_output
 
+    # convert heat map image to uint8 image for debug_image function
     def hot2uint8Img(self, hot):
 
         imgHot = cm.hot(hot / 10)
         imgHot = (imgHot[:, :, :3] * 255).astype(np.uint8)
         return imgHot
 
+    # test hot imahe implementation
     def testFullFrameProcess2(self):
 
         image = imread('test_images/test1.jpg')

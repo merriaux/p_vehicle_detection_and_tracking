@@ -1,9 +1,12 @@
-# Object Tracker
-# Goal is to build the ultimate object tracker for vehicles, people, signs and other relevant information
+
+# Vehicles tracking implementation with a GNN algorithm (Global nearest neighbor  http://www.control.isy.liu.se/student/graduate/TargetTracking/Lecture5.pdf).
+
+
 import cv2
 import math
 import numpy as np
 
+# objet t track class
 class Object:
     def __init__(self,_position, _bBox, _targetIndex):
         self.position = _position
@@ -18,10 +21,11 @@ class Object:
         self.listPosition.append(_position)
         self.listBoundingBox.append(_bBox)
 
+    # compute distance between this and targe
     def distance(self,_position):
         return math.sqrt(math.pow(self.position[0]-_position[0],2)+math.pow(self.position[1]-_position[1],2));
 
-
+    # update object from target list
     def update(self,targets,bBox):
         minDistance = float("inf");
         for idxTarget in range(0,len(targets)):
@@ -48,42 +52,41 @@ class Object:
                 self.age = 0
             self.targetIndex = -1
 
+    # compute the average position and bouding box
     def getPosition(self):
         posMean=np.mean(np.array(self.listPosition), axis=0).astype(np.uint16)
         bbMean=np.mean(np.array(self.listBoundingBox), axis=0).astype(np.uint16)
         return posMean,bbMean
 
-
+# vehicule, derivate from object
 class Vehicle(Object):
      def __init__(self, position,_bBox, _targetIndex):
         Object.__init__(self, position,_bBox, _targetIndex)
 
-class Person(Object):
-    def __init__(self, position, _bBox, _targetIndex):
-        Object.__init__(self, position, _bBox, _targetIndex)
-
-class Sign(Object):
-    def __init__(self, position, _bBox, _targetIndex):
-        Object.__init__(self, position, _bBox, _targetIndex)
-
+# tracker class, to manage vehicles list
 class Tracker:
     def __init__(self):
         self.cars=[]
 
+    # new targets list from svc detection
     def newDetection(self,targets,bBoxs):
+        # if no target, decrease of every cars
         if(len(targets)==0):
             for car in self.cars:
                 car.age-=1
                 if(car.age==0):
                     self.cars.remove(car)
             return
+        # if no car, add all
         if(len(self.cars)==0):
             for i in range (0, len(targets)):
                 self.cars.append(Vehicle(targets[i],bBoxs[i],i))
 
         else:
+            # for each car update position from target
             for car in self.cars:
                 car.update(targets,bBoxs)
+            # remove car with 0 age
             toRemove = []
             for car in self.cars:
                 if(car.age==0):
@@ -114,7 +117,7 @@ class Tracker:
                     self.cars.append(Vehicle(targets[i], bBoxs[i], i))
 
 
-
+    # get tracker results
     def getTrackingResult(self):
         pos = []
         bBox = []

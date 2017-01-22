@@ -13,6 +13,13 @@ import time
 from loadData import LoadData
 from skimage.io import imread
 
+
+#From loadData class, compute features for each sample, the whole feature is normalize.
+#The dataset is randomized and splited in train and test set.
+#Dump the features result in pickle file.
+#Also dump the scaler (sklearn.preprocessing.StandardScaler) in a pickle file.
+
+
 class Features:
     def __init__(self):
         self.X_train = None
@@ -72,6 +79,8 @@ class Features:
                                   hist_bins, hist_range, orient, pix_per_cell, cell_per_block, hog_channel)
         # Return list of feature vectors
         return features
+
+    # extracture from a numpy array
     def extract_featuresImgNP(self,imgNP, cspace='RGB', spatial_size=(32, 32),
                          hist_bins=32, hist_range=(0, 256), orient=9,
                          pix_per_cell=8, cell_per_block=2, hog_channel=0):
@@ -89,57 +98,10 @@ class Features:
         #normalized = normalize(hog_array)
         features.append(hog_array)
 
-        '''
-        # Read in each one by one
-        image = imgNP
-        # apply color conversion if other than 'RGB'
-        if cspace != 'RGB':
-            if cspace == 'HSV':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-            elif cspace == 'LUV':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-            elif cspace == 'HLS':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-            elif cspace == 'YUV':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
-        else:
-            feature_image = np.copy(image)
-        gray_image = cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
-        # Apply bin_spatial() to get spatial color features
-
-        spatial_features = self.bin_spatial(feature_image, size=spatial_size)
-        # Apply color_hist() also with a color space option now
-        hist_features = self.color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
-        # Call get_hog_features() with vis=False, feature_vec=True
-        #t1 = time.time()
-        # refaire un essai avec LAB hog deactiver sqrt_transform
-        hog_features = self.get_hog_features(gray_image, orient,
-                                            pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-
-        #t2 = time.time()
-        #print(t2-t1,"s")
-
-        otherHogImage = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-
-        hog_featuresH = self.get_hog_features(otherHogImage[:,:,0], orient,
-                                             pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-        hog_featuresL = self.get_hog_features(otherHogImage[:, :, 1], orient,
-                                              pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-        hog_featuresS = self.get_hog_features(otherHogImage[:, :, 2], orient,
-                                              pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-
-        # Append the new feature vector to the features list
-        features.append(np.concatenate((spatial_features, hist_features, hog_features)))
-        # = np.concatenate((hog_features,), axis = 0)
-        #normalized = normalize(hog_array.reshape(1, -1))
-        #features.append(hog_array)
-        #features.append((hog_features,hog_featuresL,hog_featuresA,hog_featuresB), axis = 0)
-        #print("feature shape",hog_features.shape, hog_featuresL.shape, " hog ", hog_featuresA.shape,hog_featuresB.shape)
-        '''
 
         # Return list of feature vectors
         return features
-
+    # compute feature for dataset car and no-car
     def featureCompute(self,cars_img,nocars_img):
         orient = 9
         pix_per_cell = 8
@@ -168,19 +130,20 @@ class Features:
             scaled_X, y, test_size=0.15, random_state=rand_state)
 
 
-
+    # feature size print
     def printFeaturesInfo(self):
         print("X_train shape", self.X_train.shape)
         print("y_train shape", self.y_train.shape)
         print("X_test shape", self.X_test.shape)
         print("y_test shape", self.y_test.shape)
 
-
+    # save features to pickle file
     def saveToPickle(self,file):
         dict={"X_train":self.X_train,"y_train":self.y_train,"X_test":self.X_test,"y_test":self.y_test, "scaler":self.scalerTransform}
         with open(file, 'wb') as handle:
             pickle.dump(dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+    #load features from pickle
     def loadFromPickle(self,file):
         with open(file, 'rb') as handle:
             d = pickle.load(handle)
@@ -190,12 +153,13 @@ class Features:
             self.y_test = d["y_test"]
             self.scalerTransform = d["scaler"]
 
-
+    # save the scaler to pickle
     def saveScalerFromPickle(self, file):
         dict = {"scaler": self.scalerTransform}
         with open(file, 'wb') as handle:
             pickle.dump(dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+    # load scaler to pickle file
     def loadScalerFromPickle(self, file):
         with open(file, 'rb') as handle:
             d = pickle.load(handle)

@@ -15,6 +15,12 @@ from sklearn.metrics import confusion_matrix
 from loadData import LoadData
 from features import Features
 
+#From features pickle file, implement SVC to classify features.
+#The SVC class is saved in file with sklearn.externals.joblib
+#few functions, to compute the score on test and train set,
+# display confusion matrix and plot SVC coefficients and feature index. (To determine each ones are significant).
+
+
 class Classifier:
     def __init__(self):
         self.svc = LinearSVC(C=0.0001)#C=0.0001)

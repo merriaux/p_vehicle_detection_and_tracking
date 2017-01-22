@@ -4,13 +4,15 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 
-
+#Sliding windows implementation, with region of interest in the image.
+#Pyramid windows, with size step and overlap tuning parameters.
+#Extraction and resizing of all image windows for prediction in classif class.
 
 class SlidingWindows:
     def __init__(self):
         self.window_list = [];
 
-    # Here is your draw_boxes function from the previous exercise
+    #  draw_boxes function from windows list
     def draw_boxes(self, img, bboxes, color=(0, 0, 255), thick=6):
         # Make a copy of the image
         imcopy = np.copy(img)
@@ -21,6 +23,7 @@ class SlidingWindows:
         # Return the image copy with boxes drawn
         return imcopy
 
+    # draw_boxes function from windows numpy array
     def draw_boxesNP(self, img, bboxes, color=(0, 0, 255), thick=6):
             # Make a copy of the image
             imcopy = np.copy(img)
@@ -30,14 +33,8 @@ class SlidingWindows:
                 cv2.rectangle(imcopy, (bboxes[i,0],bboxes[i,1]), (bboxes[i,2],bboxes[i,3]), color, thick)
             # Return the image copy with boxes drawn
             return imcopy
-        # Define a function that takes an image,
-        # start and stop positions in both x and y,
-        # window size (x and y dimensions),
-        # and overlap fraction (for both x and y)
-        # Define a function that takes an image,
-        # start and stop positions in both x and y,
-        # window size (x and y dimensions),
-        # and overlap fraction (for both x and y)
+
+    # slide windows function
     def slide_window(self, img, x_start_stop=[None, None], y_start_stop=[None, None],
                      xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
         # If x and/or y start/stop positions not defined, set to image size
@@ -79,6 +76,7 @@ class SlidingWindows:
         # Return the list of windows
         return window_list
 
+    # init ROI from project 1 and 4
     def initROI(self,img):
         imshape = img.shape
         imgROI = np.copy(img)
@@ -91,6 +89,7 @@ class SlidingWindows:
         cv2.polylines(imgROI, vertices, True, (0, 255, 0), 3)
         return(imgROI)
 
+    # test if the windows is in ROI from list of coordonates
     def isWindowsInROI(self,window):
         try:
             test=not ((self.maskROI[window[0][1], window[0][0]] == 0) and (self.maskROI[window[0][1], window[1][0]-1] == 0) and
@@ -101,6 +100,7 @@ class SlidingWindows:
 
         return(test)
 
+    # test if the windows is in ROI from a numpy array
     def isWindowsInRoiNP(self,window):
         try:
             test=not ((self.maskROI[window[1], window[0]] == 0) and (self.maskROI[window[1], window[2]-1] == 0) and
@@ -111,7 +111,7 @@ class SlidingWindows:
 
         return(test)
 
-    # ajouter une polyline de ROI
+    # call slide_windows for different windows size
     def pyramid_windows(self,img,windows_size=(32,128),overlap=0.75):
         self.initROI(img)
         window_list = []
@@ -121,9 +121,11 @@ class SlidingWindows:
             window_size = window_size + windows_size[0]
         return(window_list)
 
+    # extract small img form windows coordonates
     def windowsImgExtract(self,img,window):
         return img[window[0][1]:window[1][1],window[0][0]:window[1][0],:]
 
+    # resize small image to 64x64 pixels
     def imgResize(self,img):
         return cv2.resize(img,(64,64),interpolation = cv2.INTER_CUBIC)
 

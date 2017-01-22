@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 
+#explorer folder of the whole dataset, to set list of vehicles and no-vehicles samples.
+#There are few functions to explore the dataset as display images, statistics about class...
+
 
 class LoadData:
     def __init__(self):
@@ -11,7 +14,7 @@ class LoadData:
 
 
 
-
+    # the small on
     def loadSmallDataSet(self):
          # Divide up into cars and notcars
          images = glob.iglob('../smallDataset/**/*.jpeg', recursive=True)
@@ -24,7 +27,7 @@ class LoadData:
                  self.cars.append(image)
 
 
-
+    # the whole dataset
     def loadDataset(self):
         images = glob.iglob('../dataset/vehicles/**/*.png', recursive=True)
         for image in images:
@@ -54,7 +57,7 @@ class LoadData:
     def printdatasetInfo(self):
         data_info = self.data_look(self.cars, self.notcars)
         print(data_info)
-
+    # display image
     def displayTwoRandomImages(self):
         car_ind = np.random.randint(0, len(self.cars))
         notcar_ind = np.random.randint(0, len(self.notcars))

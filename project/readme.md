@@ -1,4 +1,3 @@
-
 # Project sources files description
 
 The project is composed of different python class :
@@ -20,29 +19,29 @@ few functions, to compute the score on test and train set, display confusion mat
 
 - **slidingWindows.py** : 
 Sliding windows implementation, with region of interest in the image. 
-Pyramid windows, with size step and overlap tuning parameter. 
+Pyramid windows, with size step and overlap tuning parameters. 
 Extraction and resizing of all image windows for prediction in classif class. 
 We will see later that because of compute effiency this implementation wasn't used in the video processing.
 
 - **procesImage.py** :
-All the processing step for test images, and video conversion.
+All the processing steps for test images, and video conversion.
 
 
 - **windowsReplay.py** :
-To experimente the tracking algorithm, I have recorded all the sliding windows predited car for each video frame in pickle file, and use it to tume tracking parameter.
+To experimente the tracking algorithm, I have recorded all the sliding windows predited car for each video frame in pickle file, and use it to tune tracking parameters.
 
 - **object_tracker.py** :
 Vehicles tracking implementation with a GNN algorithm (Global nearest neighbor  http://www.control.isy.liu.se/student/graduate/TargetTracking/Lecture5.pdf).
 
 - **laneDetection.py** :
-Few class to reuse project 4 lane detection.
+Few class to re-use project 4 lane detection.
 
 
 # Information to run the project
 
 If you want the run the project, run in this order :
 
-1. features.py
+1. features.py 
 2. classif.py
 3. procesImage.py
 
@@ -50,21 +49,22 @@ If you want the run the project, run in this order :
 # Project conception and details
 
 ## features extraction	
-I have tested different	kinds of features (color histogramme, reduce size image, histogramme of gradient), in few color spaces (RGB, HSV, LUV, HLS, YUV and LAB). 
+I have tested different	kinds of features (color histogramme, reduce size image, histogram of gradient), in few color spaces (RGB, HSV, LUV, HLS, YUV and LAB). 
 I have obtain my best result with LAB color space and a HOG on each channel. 
 The feature size is 5292 for a image of 64x64 pixels. 
 
 My parameters are : orient=9, pix_per_cell=8, cell_per_block=2
 
 ## Classification
-I use linearSCV classifier. The feature are normalize with *sklearn.preprocessing.StandardScaler*. I have tried SCV(rbf), the score was better but the time to fit and predit was really huge. 
+I use linearSCV classifier. The feature are normalize with *sklearn.preprocessing.StandardScaler*. 
+I have tried SCV(rbf), the score was better but the time to fit and predit was really huge. 
 So the linearSCV seem to be a good compromise.
 
 With C=1 the result is :
 - accuracy on train 1.0
 - accuracy on test 0.978
 
-I test different value for C parameter to increase score on test C, and increase its generalization capacity.
+I test different value for C parameter to increase score on test set, and increase its generalization capacity.
 
 My best result is with C=0.0001 :
 
@@ -98,16 +98,16 @@ So I try a other idea.
 
 # sliding windows optimized
 
-the idea is the compute the HOG on the whole image and slide windows in feature directly (without ravel !).
+The idea is the compute the HOG on the whole image and slide windows in feature directly (without ravel !).
 For a 64x64 image, a single channel HOG feature shape is [7,7,2,2,9] x 3 channels.
-So in the whole HOG image a select [7,7,2,2,9] features and reshape its to line (with *.ravel()* function).
-I sliding this "windows" for each pix_per_cell, so the overlap is 7/8. I concatenate all in one matrix, to normalize and predict.
+So in the whole HOG image a select [7,7,2,2,9] features and reshape its to line (with *.ravel()* function). (see function : *fullFrameHogAnalyse* in *processImage.py*)
+I sliding this "windows" for each *pix_per_cell*, so the overlap is 7/8. I concatenate all in one matrix, to normalize and predict.
 For multiscale search, I resize the whole image before HOG extraction.
-Actualy I do it for 5 different scale factors : [1.0,1.3,1.7,2.2,2.9] it correspond to 64x64, 83x83, 108x108, 140x140 and 185x185 window sizes.
+Actually I do it for 5 different scale factors : [1.0,1.3,1.7,2.2,2.9] it correspond to 64x64, 83x83, 108x108, 140x140 and 185x185 window sizes.
 
-Of course I kept the ROI to reduce the number of windows.
+Of course I kept the ROI to reduce the number of windows. And the image top before HOG operation is clippped.
 With this parameters, the total number of windows is 10898 (A huge overlap !).
-The cpu time to compute one image (1280x720) is around 2s, so really more efficency than my first sliding windows/features implemantation.
+The cpu time to compute one image (1280x720) is around 2s, so really more efficency (around x25 faster) than my first sliding windows/features implemantation.
 
 
 To reduce the number of false positif, I compute and threshold on *decision_function*.
@@ -115,21 +115,25 @@ To reduce the number of false positif, I compute and threshold on *decision_func
 The result on test images is below:
 ![The detection result on test images is below](readmeImg/multiScaleResult.png)
 
+The result is good not too much false negative, so I don't implement hard negative mining.
+
 
 ## Windows merging
 All the windows for the same car have to be merge in only one bounding box.
 
-For that I use a "*hot point*" image. In a float image, I add the *decision_function* on each windows. And I obtain this kind of result :
+For that I use a "*hot point*" image (*heat map* seem to be a better word, sorry for my english !). 
+In a float image, I add the *decision_function* result on each windows. 
+And I obtain this kind of result :
 ![Origine image](readmeImg/ProcessTest1.png)
 ![Hot point](readmeImg/hotpoint.png)
 
-I threshold it:
+I threshold it, to segment:
 ![Hot point thresholded](readmeImg/hotpointThreshold.png)
 
 I use the *cv2.findcontours* function to extract shape contours. *cv2.boundingRect* return me the bouding box, 
 and cv2.moments able me to compute the centroides.
 
-The results on test images is below (green : adding of thresholded hot point):
+The results on test images is below (green : sum of thresholded hot point (*heat map*)):
 
 ![Final results on test images](readmeImg/multiScaleResultHotpoint.png)
 
@@ -141,14 +145,19 @@ It have some time a false positive, so I will implement a tracking solution for 
 
 ## tracking
 I implement a GNN algorithm (Global nearest neighbor  http://www.control.isy.liu.se/student/graduate/TargetTracking/Lecture5.pdf).
-For all targets predicted in hotpoint image, I test the shortest distance with actual cars tracked position. (test all the combination : not very efficience if there are lots of cars in the image).
+For all targets predicted in hotpoint image (heat map), I test the shortest distance with actual cars tracked position. (test all the combination : not very efficience if there are lots of cars in the image).
 If this distance is below a threshold, I increase the age of the car. 
 If the car not have target the age is decrease.
 If targets don't find associated car, I create a new car object to track this new target.
 
-If the age is above a threshold the car is display, that filter short time false positive detections. If the target isn't detected uring few frames, this age decreace since 0, so the car isn't delete immediatly. So the target will detect few frames after, the car will have the same trakcing index.
-Now we are able to have a "unique index number" fr each vehile tracked. 
-So we can average the position and the bounding box of each car on time. 
+If the age is above a threshold the car is display, that filter short time false positive detections. 
+If the target isn't detected uring few frames, this age decreace since 0, so the car isn't delete immediatly. 
+So the target will detect few frames after, the car will have the same trakcing index.
+Now we are able to have a "unique index number" for each vehile tracked. 
+So to smooth the result, I average the position and the bounding box of each car on time. 
+
+To easily tune tracking parameter, Iincrease the computing speed by dumg to a file all the sliding windows classification results.
+It is done with windowsReplay class.
 
 ## lane detection
 I just refactorize my project 4 code in *LaneDetection* class, and run it from input image.
@@ -162,9 +171,9 @@ It could be also find here : https://www.youtube.com/watch?v=GRynrQc-2_M
 Description of each "debug video" patchwork :
 
 1. The final output with averaged tracking position/bounding box and car labeling
-2. The ouput of fincontour and centroide extraction (from hotPoint segmentation)
+2. The ouput of fincontour and centroide extraction (from hotPoint (heat map) segmentation)
 3. The predicted sliding windows result
-4. Hotpoint image
+4. Hotpoint (heat map) image
 5. Segmented hotpoint image
 6. The original input image
 7. Lines search (project 4)
@@ -178,6 +187,6 @@ Description of each "debug video" patchwork :
 
 # Improvements
 
-Tracking could be improve with quite logic. For example, to don't merge two vehicles in same one when they are Superimposed. 
+Tracking could be improve with quite logic. For example, to don't merge two vehicles in one when they are superimposed. 
 
 

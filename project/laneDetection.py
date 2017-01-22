@@ -6,6 +6,9 @@ import pickle
 
 from skimage.io import imread
 
+
+# project 4 class for lane detection
+
 class Line2():
     def __init__(self, numberFrame=5):
         self.poly = []
