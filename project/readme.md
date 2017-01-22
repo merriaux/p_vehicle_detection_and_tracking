@@ -31,6 +31,13 @@ All the processing step for test images, and video conversion.
 - **windowsReplay.py** :
 To experimente the tracking algorithm, I have recorded all the sliding windows predited car for each video frame in pickle file, and use it to tume tracking parameter.
 
+- ** object_tracker.py** :
+Vehicles tracking implementation with a GNN algorithm (Global nearest neighbor  http://www.control.isy.liu.se/student/graduate/TargetTracking/Lecture5.pdf).
+
+- **laneDetection.py** :
+Few class to reuse project 4 lane detection.
+
+
 # Information to run the project
 
 If you want the run the project, run in this order :
@@ -133,6 +140,41 @@ I have processed the project video with this pipeline and the result is not soo 
 It have some time a false positive, so I will implement a tracking solution for label the car and remove if their age are young.
 
 ## tracking
+I implement a GNN algorithm (Global nearest neighbor  http://www.control.isy.liu.se/student/graduate/TargetTracking/Lecture5.pdf).
+For all targets predicted in hotpoint image, I test the shortest distance with actual cars tracked position. (test all the combination : not very efficience if there are lots of cars in the image).
+If this distance is below a threshold, I increase the age of the car. 
+If the car not have target the age is decrease.
+If targets don't find associated car, I create a new car object to track this new target.
+
+If the age is above a threshold the car is display, that filter short time false positive detections. If the target isn't detected uring few frames, this age decreace since 0, so the car isn't delete immediatly. So the target will detect few frames after, the car will have the same trakcing index.
+Now we are able to have a "unique index number" fr each vehile tracked. 
+So we can average the position and the bounding box of each car on time. 
+
+## lane detection
+I just refactorize my project 4 code in *LaneDetection* class, and run it from input image.
+
+# final video
+The final result seem to be nice. 
+The video file is pushed in Git : *videoOutputFinalProject.mp4*
+It could be also find here : https://www.youtube.com/watch?v=GRynrQc-2_M
 
 
-### final video
+Decription of each "debug video" patchwork :
+1. The final output with averaged tracking position/bounding box and car labeling
+2. The ouput of fincontour and centroide extraction (from hotPoint segmentation)
+3. The predicted sliding windows result
+4. Hotpoint image
+5. Segment hotpoint image
+6. The original input image
+7. Lines search (project 4)
+8. Unwrapped perspective image (project 4)
+9. Global histogram research (project 4)
+10. Image line extraction (project 4)
+
+
+
+![Result video description](readmeImg/finalVideoDescription.png)
+
+Tracking could be improve with quite logic, to don't merge two vehicles in same one when they are Superimposed. 
+
+
